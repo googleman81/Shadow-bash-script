@@ -7,6 +7,9 @@ While the script is comprehensive, it's also somewhat personalized to the users 
 
 Some of the functionality, like the rate limiting, may already be provided through either said ISP or router and certain functionality proven to be beneficial for this user specifically, like the awdl deactivation loop, may be unwanted or provide negligible benefit under differing conditions, so feel free to remove unwanted items.
 
+Particularly the speed1 and speed2 settings work better with more demanding games.
+While AC Shadows runs great on speed2, Ghost Recon Breakpoint runs better on speed1, for example, so some experimentation may still be required.
+
 Have fun gaming.
 
 
