@@ -21,7 +21,6 @@ rm -rf "$HOME/Library/Application Support/GeForceNOW" \
 "$HOME/Library/Application Scripts/com.nvidia.GeForceNOW" \
 "$HOME/Library/Cookies/com.nvidia.GeForceNOW.binarycookies" \
 "$HOME/Library/Preferences/com.nvidia.GeForceNOW.plist" \
-"$HOME/Library/Containers/GeForceNOWContainer" \
 "$HOME/Library/Group Containers/group.com.nvidia.GeForceNOW" \
 "$HOME/Library/WebKit/com.nvidia.GeForceNOW" \
 "$HOME/Library/Application Support/com.nvidia.GeForceNOW"
