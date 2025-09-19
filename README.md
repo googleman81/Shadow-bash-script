@@ -9,21 +9,10 @@ Some of the functionality, like the rate limiting, may already be provided throu
 
 Have fun gaming.
 
-Edit: I recommend running the following periodically, it will force a new sign on and reconfiguration of the app settings and is currently the best method I've found to erase performance decreases caused by the accumulation of GFN related files:
+Edit:
 
-rm -rf "$HOME/Library/Application Support/GeForceNOW" \
-"$HOME/Library/Application Support/NVIDIA/GeForceNOW" \
-"$HOME/Library/Caches/GeForceNOW" \
-"$HOME/Library/Caches/NVIDIA" \
-"$HOME/Library/Logs/GeForceNOW" \
-"$HOME/Library/Logs/NVIDIA" \
-"$HOME/Library/Saved Application State/com.nvidia.GeForceNOW.savedState" \
-"$HOME/Library/Application Scripts/com.nvidia.GeForceNOW" \
-"$HOME/Library/Cookies/com.nvidia.GeForceNOW.binarycookies" \
-"$HOME/Library/Preferences/com.nvidia.GeForceNOW.plist" \
-"$HOME/Library/Group Containers/group.com.nvidia.GeForceNOW" \
-"$HOME/Library/WebKit/com.nvidia.GeForceNOW" \
-"$HOME/Library/Application Support/com.nvidia.GeForceNOW"
+I additionally recommend setting the DNS for the device to a proper IPv6 connection, enable stealth mode in the firewall settings and disable incoming connections from downloaded and signed software.
+
 
 
 
