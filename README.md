@@ -11,7 +11,7 @@ Have fun gaming.
 
 Edit:
 
-I additionally recommend enabling stealth mode in the firewall settings and disabling incoming connections from downloaded and signed software.
+I additionally recommend setting the DNS for the device to a proper IPv6 connection, enabling stealth mode in the firewall settings and disabling incoming connections from downloaded and signed software.
 
 
 
