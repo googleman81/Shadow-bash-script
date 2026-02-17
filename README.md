@@ -13,6 +13,15 @@ Edit:
 
 I additionally recommend setting the DNS for the device to a proper IPv6 connection, enabling stealth mode in the firewall settings and disabling incoming connections from downloaded and signed software.
 
+I also recommend running:
+
+launchctl disable gui/$(id -u)/com.apple.podcasts.PodcastsAgent
+launchctl disable gui/$(id -u)/com.apple.podcasts.PodcastContentService
+
+This will disable background activity from the Podcast app, which may cause latency or jitter.
+It will survive a reboot but is easily reversible by using the exact same command while replacing "disable" with "enable".
+
+
 
 
 
