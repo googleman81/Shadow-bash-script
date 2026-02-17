@@ -16,6 +16,7 @@ I additionally recommend setting the DNS for the device to a proper IPv6 connect
 I also recommend running:
 
 launchctl disable gui/$(id -u)/com.apple.podcasts.PodcastsAgent
+
 launchctl disable gui/$(id -u)/com.apple.podcasts.PodcastContentService
 
 This will disable background activity from the Podcast app, which may cause latency or jitter.
