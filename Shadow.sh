@@ -23,8 +23,12 @@ SCRIPT_PATH="$(cd "$(dirname "$0")" 2>/dev/null && pwd -P)/$(basename "$0")"
 
 shinobi2_1() {
     local port lsof_output pid
-    local me
-    me="$(/usr/bin/id -un)"
+    local me="${1:-}"
+
+    if [[ -z "$me" || "$me" == "root" || "$me" == "loginwindow" ]]; then
+        echo "[Shadow] Shinobi 2.1 received an invalid protected user." >&2
+        exit 1
+    fi
 
     local ports=(
         # 🌐 Universal ports
@@ -48,11 +52,11 @@ shinobi2_1() {
     while true; do
         for port in "${ports[@]}"; do
             lsof_output="$(
-                /usr/sbin/lsof -nP \
-                    -iUDP:"$port" -iTCP:"$port" \
-                    -i6UDP:"$port" -i6TCP:"$port" 2>/dev/null |
-                /usr/bin/grep -v "$me" |
-                /usr/bin/awk 'NR>1'
+    /usr/sbin/lsof -nP \
+        -iUDP:"$port" -iTCP:"$port" \
+        -i6UDP:"$port" -i6TCP:"$port" 2>/dev/null |
+    /usr/bin/awk -v protected_user="$me" \
+        'NR > 1 && $3 != protected_user'
             )"
 
             if [[ -n "$lsof_output" ]]; then
@@ -133,7 +137,7 @@ airtouch() {
 
 case "${1:-}" in
     --shadow-worker-shinobi21)
-        shinobi2_1
+        shinobi2_1 "${2:-}"
         exit 0
         ;;
     --shadow-worker-shinobi24)
@@ -232,7 +236,13 @@ launch_root_worker() {
     echo "[Shadow] Started $label."
 }
 
-launch_user_worker --shadow-worker-shinobi21 "Shinobi 2.1"
+if worker_running --shadow-worker-shinobi21; then
+    echo "[Shadow] Shinobi 2.1 is already running."
+else
+    /usr/bin/nohup "$SCRIPT_PATH" \
+        --shadow-worker-shinobi21 "$REAL_USER" >/dev/null 2>&1 &
+    echo "[Shadow] Started Shinobi 2.1."
+fi
 launch_user_worker --shadow-worker-shinobi24 "Shinobi 2.4"
 launch_root_worker --shadow-worker-airtouch "Airtouch"
 
