@@ -226,23 +226,23 @@ launch_user_worker() {
 launch_root_worker() {
     local worker="$1"
     local label="$2"
+    local worker_arg="${3:-}"
 
     if worker_running "$worker"; then
         echo "[Shadow] $label is already running."
         return
     fi
 
-    /usr/bin/nohup "$SCRIPT_PATH" "$worker" >/dev/null 2>&1 &
+    if [[ -n "$worker_arg" ]]; then
+        /usr/bin/nohup "$SCRIPT_PATH" "$worker" "$worker_arg" >/dev/null 2>&1 &
+    else
+        /usr/bin/nohup "$SCRIPT_PATH" "$worker" >/dev/null 2>&1 &
+    fi
+
     echo "[Shadow] Started $label."
 }
 
-if worker_running --shadow-worker-shinobi21; then
-    echo "[Shadow] Shinobi 2.1 is already running."
-else
-    /usr/bin/nohup "$SCRIPT_PATH" \
-        --shadow-worker-shinobi21 "$REAL_USER" >/dev/null 2>&1 &
-    echo "[Shadow] Started Shinobi 2.1."
-fi
+launch_root_worker --shadow-worker-shinobi21 "Shinobi 2.1" "$REAL_USER"
 launch_user_worker --shadow-worker-shinobi24 "Shinobi 2.4"
 launch_root_worker --shadow-worker-airtouch "Airtouch"
 
