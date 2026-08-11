@@ -242,7 +242,7 @@ launch_root_worker() {
     echo "[Shadow] Started $label."
 }
 
-launch_root_worker --shadow-worker-shinobi21 "Shinobi 2.1" "$REAL_USER"
+# launch_root_worker --shadow-worker-shinobi21 "Shinobi 2.1" "$REAL_USER"
 launch_user_worker --shadow-worker-shinobi24 "Shinobi 2.4"
 launch_root_worker --shadow-worker-airtouch "Airtouch"
 
