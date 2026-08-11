@@ -197,7 +197,7 @@ apply_sysctl net.inet.tcp.accurate_ecn=1
 apply_sysctl net.qos.policy.wifi_enabled=1
 
 # ----------------------------------------------------------------
-# 🚀 Launch background workers once
+# 🚀 Launch background workers
 # ----------------------------------------------------------------
 
 worker_running() {
