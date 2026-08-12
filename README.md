@@ -14,6 +14,9 @@ launchctl disable gui/$(id -u)/com.apple.podcasts.PodcastContentService
 This will disable background activity from the Podcast app, which may cause latency or jitter.
 It will survive a reboot but is easily reversible by using the exact same command while replacing "disable" with "enable".
 
+If you just want the networking improvements apply sudo sysctl -w net.inet... in Terminal for the values represented in lines 191-201 ie.
+sudo sysctl -w net.inet.tcp.accurate_ecn=1
+
 Have fun gaming.
 
 
