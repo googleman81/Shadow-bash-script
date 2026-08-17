@@ -75,30 +75,31 @@ shinobi2_1() {
 
 shinobi2_4() {
     local process_name="GeForceNOW"
+    local streamer_name="GeForceNOWStreamer"
+    local container_name="GeForceNOWContainer"
     local gfn_was_running=false
     local gfn_running path
+
+    local gfn_root="$HOME/Library/Application Support/NVIDIA/GeForceNOW"
+    local cef_default="$gfn_root/CefCache/Default"
 
     local clean_paths=(
         "$HOME/Library/Caches/GeForceNOW"
         "$HOME/Library/Logs/GeForceNOW"
         "$HOME/Library/Caches/NVIDIA"
         "$HOME/Library/Logs/NVIDIA"
-        "$HOME/Library/Application Support/GeForceNOW/cef"
-        "$HOME/Library/Application Support/NVIDIA/GeForceNOW/streaming-telemetry"
-        "$HOME/Library/Application Support/NVIDIA/GeForceNOW/temp"
-        "$HOME/Library/Application Support/NVIDIA/GeForceNOW/Cache"
-        "$HOME/Library/Application Support/NVIDIA/GeForceNOW/Code Cache"
-        "$HOME/Library/Application Support/NVIDIA/GeForceNOW/Session Storage"
-        "$HOME/Library/Application Support/NVIDIA/GeForceNOW/Network Persistent State"
-        "$HOME/Library/Application Support/NVIDIA/GeForceNOW/Service Worker/CacheStorage"
-        "$HOME/Library/Application Support/NVIDIA/GeForceNOW/Service Worker/ScriptCache"
-        "$HOME/Library/Application Support/NVIDIA/GeForceNOW/IndexedDB"
-        "$HOME/Library/Application Support/NVIDIA/GeForceNOW/Local Storage"
-        "$HOME/Library/Application Support/NVIDIA/GeForceNOW/TransportSecurity"
+        "$gfn_root/logs"
+        "$gfn_root/telemetry"
+        "$gfn_root/temp"
+        "$gfn_root/tempFreestylePreview"
+        "$cef_default/Session Storage"
+        "$cef_default/Service Worker/CacheStorage"
+        "$cef_default/Service Worker/ScriptCache"
     )
 
     while true; do
-        if /usr/bin/pgrep -x "$process_name" >/dev/null 2>&1; then
+        if /usr/bin/pgrep -x "$process_name" >/dev/null 2>&1 ||
+           /usr/bin/pgrep -x "$streamer_name" >/dev/null 2>&1; then
             gfn_running=true
         else
             gfn_running=false
@@ -109,6 +110,15 @@ shinobi2_4() {
             /bin/sleep 15
         else
             if [[ "$gfn_was_running" == true ]]; then
+                if /usr/bin/pgrep -x "$container_name" >/dev/null 2>&1; then
+                    /usr/bin/pkill -TERM -x "$container_name" 2>/dev/null
+                    /bin/sleep 5
+
+                    if /usr/bin/pgrep -x "$container_name" >/dev/null 2>&1; then
+                        /usr/bin/pkill -KILL -x "$container_name" 2>/dev/null
+                    fi
+                fi
+
                 for path in "${clean_paths[@]}"; do
                     if [[ -d "$path" ]]; then
                         /bin/rm -rf \
@@ -120,6 +130,7 @@ shinobi2_4() {
                     fi
                 done
             fi
+
             gfn_was_running=false
             /bin/sleep 60
         fi
