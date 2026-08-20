@@ -107,7 +107,7 @@ shinobi2_4() {
         "$gfn_root/geronimo.log"
         "$gfn_root/console.log"
         "$gfn_root/debug.log"
-        "$gfn_root/MessageBus_GFN_sessionarneneumann.conf"
+        "$gfn_root/MessageBus_GFN_session*.conf
         "$gfn_root/NvCrimson.gfnupdate.json"
         "$gfn_root/NvCrimson.sharedstorage.json"
         "$gfn_root/NvCrimson.storage.json"
