@@ -212,7 +212,7 @@ shinobi2_4() {
 
 airtouch() {
     while true; do
-        if /sbin/ifconfig awdl0 2>/dev/null | /usr/bin/grep -q '<UP,'; then
+        if /sbin/ifconfig awdl0 2>/dev/null | /usr/bin/grep -q 'status: active'; then
             /sbin/ifconfig awdl0 down >/dev/null 2>&1 || true
         fi
 
