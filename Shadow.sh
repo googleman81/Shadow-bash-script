@@ -103,7 +103,7 @@ shinobi2_4() {
         "$gfn_root/CefCache"
         "$gfn_root/ReliabilityMonitor"
         "$gfn_root/Share"
-        "$gfn_root/CxNative_GeForceNOW.log"
+        "$gfn_root/CxNative_GeForceNOW*.log"
         "$gfn_root/geronimo.log"
         "$gfn_root/console.log"
         "$gfn_root/debug.log"
