@@ -82,8 +82,11 @@ shinobi2_4() {
 
     local gfn_root="$HOME/Library/Application Support/NVIDIA/GeForceNOW"
     local cef_default="$gfn_root/CefCache/Default"
+    local darwin_cache="$(/usr/bin/getconf DARWIN_USER_CACHE_DIR)"
+    local darwin_temp="$(/usr/bin/getconf DARWIN_USER_TEMP_DIR)"
 
     local clean_paths=(
+        # Existing 2.4 targets
         "$HOME/Library/Caches/GeForceNOW"
         "$HOME/Library/Logs/GeForceNOW"
         "$HOME/Library/Caches/NVIDIA"
@@ -95,6 +98,76 @@ shinobi2_4() {
         "$cef_default/Session Storage"
         "$cef_default/Service Worker/CacheStorage"
         "$cef_default/Service Worker/ScriptCache"
+
+        # Complete observed GFN root, excluding sharedstorage.json
+        "$gfn_root/CefCache"
+        "$gfn_root/ReliabilityMonitor"
+        "$gfn_root/Share"
+        "$gfn_root/CxNative_GeForceNOW.log"
+        "$gfn_root/geronimo.log"
+        "$gfn_root/console.log"
+        "$gfn_root/debug.log"
+        "$gfn_root/MessageBus_GFN_sessionarneneumann.conf"
+        "$gfn_root/NvCrimson.gfnupdate.json"
+        "$gfn_root/NvCrimson.sharedstorage.json"
+        "$gfn_root/NvCrimson.storage.json"
+        "$gfn_root/storage.json"
+        "$gfn_root/updatestatus.json"
+
+        # Current and legacy Application Support
+        "$HOME/Library/Application Support/NVIDIA Corporation"
+        "$HOME/Library/Application Support/GeForceNOW"
+        "$HOME/Library/Application Support/com.nvidia.GeForceNOW"
+        "$HOME/Library/Application Support/com.nvidia.gfnpc.mall"
+
+        # Current and legacy caches
+        "$HOME/Library/Caches/com.nvidia.gfnpc.mall"
+        "$HOME/Library/Caches/com.nvidia.GeForceNOW"
+        "$HOME/Library/Caches/com.nvidia.nvcontainer"
+        "$HOME/Library/Caches/com.apple.nsurlsessiond/Downloads/com.nvidia.gfnpc.mall"
+
+        # HTTP, WebKit and cookie state
+        "$HOME/Library/HTTPStorages/com.nvidia.gfnpc.mall"
+        "$HOME/Library/HTTPStorages/com.nvidia.GeForceNOW"
+        "$HOME/Library/HTTPStorages/com.nvidia.nvcontainer"
+        "$HOME/Library/WebKit/com.nvidia.gfnpc.mall"
+        "$HOME/Library/WebKit/com.nvidia.GeForceNOW"
+        "$HOME/Library/Cookies/com.nvidia.gfnpc.mall.binarycookies"
+        "$HOME/Library/Cookies/com.nvidia.GeForceNOW.binarycookies"
+
+        # Saved state, scripts and shared containers
+        "$HOME/Library/Saved Application State/com.nvidia.gfnpc.mall.savedState"
+        "$HOME/Library/Saved Application State/com.nvidia.GeForceNOW.savedState"
+        "$HOME/Library/Application Scripts/com.nvidia.gfnpc.mall"
+        "$HOME/Library/Application Scripts/com.nvidia.GeForceNOW"
+        "$HOME/Library/Application Scripts/com.nvidia.nvcontainer"
+        "$HOME/Library/Group Containers/group.com.nvidia.gfnpc.mall"
+        "$HOME/Library/Group Containers/group.com.nvidia.GeForceNOW"
+
+        # Current and legacy preference plists
+        "$HOME/Library/Preferences"/com.nvidia.gfnpc.mall*.plist
+        "$HOME/Library/Preferences"/com.nvidia.GeForceNOW*.plist
+        "$HOME/Library/Preferences"/com.nvidia.nvcontainer*.plist
+
+        # Exact current-user Darwin caches
+        "$darwin_cache/com.nvidia.gfnpc.mall"
+        "$darwin_cache/com.nvidia.gfnpc.mall.helper.gpu"
+
+        # Randomly suffixed current-user temporary directories
+        "$darwin_temp"/.com.nvidia.gfnpc.mall.*
+        "$darwin_temp"/com.nvidia.gfnpc.mall*
+        "$darwin_temp"/.com.nvidia.GeForceNOW.*
+        "$darwin_temp"/com.nvidia.GeForceNOW*
+
+        # User crash-report bookkeeping and reports
+        "$HOME/Library/Application Support/CrashReporter"/GeForceNOW*
+        "$HOME/Library/Application Support/CrashReporter"/com.nvidia.gfnpc.mall*
+        "$HOME/Library/Logs/DiagnosticReports"/GeForceNOW*
+        "$HOME/Library/Logs/DiagnosticReports"/com.nvidia.gfnpc.mall*
+
+        # System diagnostic reports observed during inventory
+        "/Library/Logs/DiagnosticReports"/GeForceNOW*
+        "/Library/Logs/DiagnosticReports"/com.nvidia.gfnpc.mall*
     )
 
     while true; do
