@@ -4,7 +4,7 @@
 # 🌑 Shadow — Unified macOS / GeForce NOW Optimizer
 #
 # Runs once with elevated privileges, then leaves three lightweight
-# background workers active: Shinobi 2.1, Shinobi 2.4, and Airtouch.
+# background workers active: Shinobi 2.1, Shinobi 2.5, and Airtouch.
 #
 # Usage:
 #   chmod +x Shadow.sh
@@ -73,20 +73,21 @@ shinobi2_1() {
     done
 }
 
-shinobi2_4() {
+shinobi2_5() {
     local process_name="GeForceNOW"
     local streamer_name="GeForceNOWStreamer"
     local container_name="GeForceNOWContainer"
     local gfn_was_running=false
-    local gfn_running path
-
     local gfn_root="$HOME/Library/Application Support/NVIDIA/GeForceNOW"
     local cef_default="$gfn_root/CefCache/Default"
-    local darwin_cache="$(/usr/bin/getconf DARWIN_USER_CACHE_DIR)"
-    local darwin_temp="$(/usr/bin/getconf DARWIN_USER_TEMP_DIR)"
+    local darwin_cache darwin_temp
 
+    darwin_cache="$(/usr/bin/getconf DARWIN_USER_CACHE_DIR 2>/dev/null || true)"
+    darwin_temp="$(/usr/bin/getconf DARWIN_USER_TEMP_DIR 2>/dev/null || true)"
+
+    # Literal targets. Directories are emptied but retained. Login/settings
+    # sharedstorage.json is deliberately excluded.
     local clean_paths=(
-        # Existing 2.4 targets
         "$HOME/Library/Caches/GeForceNOW"
         "$HOME/Library/Logs/GeForceNOW"
         "$HOME/Library/Caches/NVIDIA"
@@ -99,15 +100,15 @@ shinobi2_4() {
         "$cef_default/Service Worker/CacheStorage"
         "$cef_default/Service Worker/ScriptCache"
 
-        # Complete observed GFN root, excluding sharedstorage.json
+        # Observed per-session GFN / CEF state
         "$gfn_root/CefCache"
         "$gfn_root/ReliabilityMonitor"
         "$gfn_root/Share"
-        "$gfn_root/CxNative_GeForceNOW*.log"
+        "$gfn_root/AppConfigs"
+        "$gfn_root/CxNative_GeForceNOW.log"
         "$gfn_root/geronimo.log"
         "$gfn_root/console.log"
         "$gfn_root/debug.log"
-        "$gfn_root/MessageBus_GFN_session*.conf"
         "$gfn_root/NvCrimson.gfnupdate.json"
         "$gfn_root/NvCrimson.sharedstorage.json"
         "$gfn_root/NvCrimson.storage.json"
@@ -126,7 +127,7 @@ shinobi2_4() {
         "$HOME/Library/Caches/com.nvidia.nvcontainer"
         "$HOME/Library/Caches/com.apple.nsurlsessiond/Downloads/com.nvidia.gfnpc.mall"
 
-        # HTTP, WebKit and cookie state
+        # HTTP, WebKit, and cookie state
         "$HOME/Library/HTTPStorages/com.nvidia.gfnpc.mall"
         "$HOME/Library/HTTPStorages/com.nvidia.GeForceNOW"
         "$HOME/Library/HTTPStorages/com.nvidia.nvcontainer"
@@ -135,7 +136,7 @@ shinobi2_4() {
         "$HOME/Library/Cookies/com.nvidia.gfnpc.mall.binarycookies"
         "$HOME/Library/Cookies/com.nvidia.GeForceNOW.binarycookies"
 
-        # Saved state, scripts and shared containers
+        # Saved state, scripts, and shared containers
         "$HOME/Library/Saved Application State/com.nvidia.gfnpc.mall.savedState"
         "$HOME/Library/Saved Application State/com.nvidia.GeForceNOW.savedState"
         "$HOME/Library/Application Scripts/com.nvidia.gfnpc.mall"
@@ -143,70 +144,186 @@ shinobi2_4() {
         "$HOME/Library/Application Scripts/com.nvidia.nvcontainer"
         "$HOME/Library/Group Containers/group.com.nvidia.gfnpc.mall"
         "$HOME/Library/Group Containers/group.com.nvidia.GeForceNOW"
-
-        # Current and legacy preference plists
-        "$HOME/Library/Preferences"/com.nvidia.gfnpc.mall*.plist
-        "$HOME/Library/Preferences"/com.nvidia.GeForceNOW*.plist
-        "$HOME/Library/Preferences"/com.nvidia.nvcontainer*.plist
-
-        # Exact current-user Darwin caches
-        "$darwin_cache/com.nvidia.gfnpc.mall"
-        "$darwin_cache/com.nvidia.gfnpc.mall.helper.gpu"
-
-        # Randomly suffixed current-user temporary directories
-        "$darwin_temp"/.com.nvidia.gfnpc.mall.*
-        "$darwin_temp"/com.nvidia.gfnpc.mall*
-        "$darwin_temp"/.com.nvidia.GeForceNOW.*
-        "$darwin_temp"/com.nvidia.GeForceNOW*
-
-        # User crash-report bookkeeping and reports
-        "$HOME/Library/Application Support/CrashReporter"/GeForceNOW*
-        "$HOME/Library/Application Support/CrashReporter"/com.nvidia.gfnpc.mall*
-        "$HOME/Library/Logs/DiagnosticReports"/GeForceNOW*
-        "$HOME/Library/Logs/DiagnosticReports"/com.nvidia.gfnpc.mall*
-
-        # System diagnostic reports observed during inventory
-        "/Library/Logs/DiagnosticReports"/GeForceNOW*
-        "/Library/Logs/DiagnosticReports"/com.nvidia.gfnpc.mall*
     )
 
+    main_process_running() {
+        /usr/bin/pgrep -x "$process_name" >/dev/null 2>&1 ||
+        /usr/bin/pgrep -x "$streamer_name" >/dev/null 2>&1
+    }
+
+    # The path match catches CEF GPU, Renderer, and Alerts helpers.
+    gfn_family_pids() {
+        {
+            /usr/bin/pgrep -x "$process_name" 2>/dev/null
+            /usr/bin/pgrep -x "$streamer_name" 2>/dev/null
+            /usr/bin/pgrep -x "$container_name" 2>/dev/null
+            /usr/bin/pgrep -x "GeForceNOW Helper" 2>/dev/null
+            /usr/bin/pgrep -x "GeForceNOW Helper (GPU)" 2>/dev/null
+            /usr/bin/pgrep -x "GeForceNOW Helper (Renderer)" 2>/dev/null
+            /usr/bin/pgrep -x "GeForceNOW Helper (Alerts)" 2>/dev/null
+            /usr/bin/pgrep -f '/GeForceNOW\.app/Contents/' 2>/dev/null
+        } | /usr/bin/sort -u
+    }
+
+    pids_still_running() {
+        local pids="$1"
+        local pid
+
+        while IFS= read -r pid; do
+            [[ "$pid" =~ ^[0-9]+$ ]] || continue
+            /bin/kill -0 "$pid" 2>/dev/null && return 0
+        done <<< "$pids"
+
+        return 1
+    }
+
+    signal_pids() {
+        local signal_name="$1"
+        local pids="$2"
+        local pid
+
+        while IFS= read -r pid; do
+            [[ "$pid" =~ ^[0-9]+$ ]] || continue
+            /bin/kill -"$signal_name" "$pid" 2>/dev/null || true
+        done <<< "$pids"
+    }
+
+    clean_literal_target() {
+        local path="$1"
+
+        if [[ -d "$path" && ! -L "$path" ]]; then
+            (
+                local entries
+                shopt -s dotglob nullglob
+                entries=("$path"/*)
+                (( ${#entries[@]} > 0 )) && /bin/rm -rf -- "${entries[@]}"
+            ) 2>/dev/null
+        elif [[ -e "$path" || -L "$path" ]]; then
+            /bin/rm -f -- "$path" 2>/dev/null
+        fi
+    }
+
+    # Resolve wildcard targets when cleanup happens, never at worker startup.
+    # This catches newly-created temp trees, plists, reports, and log rotations.
+    remove_dynamic_targets() {
+        local path
+
+        for path in \
+            "$HOME/Library/Preferences"/com.nvidia.gfnpc.mall*.plist \
+            "$HOME/Library/Preferences"/com.nvidia.GeForceNOW*.plist \
+            "$HOME/Library/Preferences"/com.nvidia.nvcontainer*.plist \
+            "$gfn_root"/CxNative_GeForceNOW*.log* \
+            "$gfn_root"/geronimo*.log* \
+            "$gfn_root"/console*.log* \
+            "$gfn_root"/debug*.log* \
+            "$gfn_root"/MessageBus_GFN_session*.conf \
+            "$HOME/Library/Application Support/CrashReporter"/GeForceNOW* \
+            "$HOME/Library/Application Support/CrashReporter"/com.nvidia.gfnpc.mall* \
+            "$HOME/Library/Logs/DiagnosticReports"/GeForceNOW* \
+            "$HOME/Library/Logs/DiagnosticReports"/com.nvidia.gfnpc.mall* \
+            "/Library/Logs/DiagnosticReports"/GeForceNOW* \
+            "/Library/Logs/DiagnosticReports"/com.nvidia.gfnpc.mall*
+        do
+            main_process_running && return 1
+            [[ -e "$path" || -L "$path" ]] || continue
+            /bin/rm -rf -- "$path" 2>/dev/null
+        done
+
+        if [[ -n "$darwin_cache" && -d "$darwin_cache" ]]; then
+            for path in \
+                "$darwin_cache"/com.nvidia.gfnpc.mall* \
+                "$darwin_cache"/com.nvidia.GeForceNOW* \
+                "$darwin_cache"/com.nvidia.nvcontainer*
+            do
+                main_process_running && return 1
+                [[ -e "$path" || -L "$path" ]] || continue
+                /bin/rm -rf -- "$path" 2>/dev/null
+            done
+        fi
+
+        if [[ -n "$darwin_temp" && -d "$darwin_temp" ]]; then
+            for path in \
+                "$darwin_temp"/.com.nvidia.gfnpc.mall.* \
+                "$darwin_temp"/com.nvidia.gfnpc.mall* \
+                "$darwin_temp"/.com.nvidia.GeForceNOW.* \
+                "$darwin_temp"/com.nvidia.GeForceNOW* \
+                "$darwin_temp"/.com.nvidia.nvcontainer.* \
+                "$darwin_temp"/com.nvidia.nvcontainer*
+            do
+                main_process_running && return 1
+                [[ -e "$path" || -L "$path" ]] || continue
+                /bin/rm -rf -- "$path" 2>/dev/null
+            done
+        fi
+    }
+
+    clean_gfn_state() {
+        local path
+
+        for path in "${clean_paths[@]}"; do
+            main_process_running && return 1
+            clean_literal_target "$path"
+        done
+
+        remove_dynamic_targets
+    }
+
+    finish_previous_session() {
+        local old_pids waited=0
+
+        # Capture only the previous session's helpers. A later launch receives
+        # new PIDs and is never sent TERM/KILL by this cleanup cycle.
+        old_pids="$(gfn_family_pids)"
+        main_process_running && return 1
+
+        while pids_still_running "$old_pids" && (( waited < 20 )); do
+            /bin/sleep 1
+            waited=$((waited + 1))
+            main_process_running && return 1
+        done
+
+        if pids_still_running "$old_pids"; then
+            main_process_running && return 1
+            signal_pids TERM "$old_pids"
+
+            waited=0
+            while pids_still_running "$old_pids" && (( waited < 5 )); do
+                /bin/sleep 1
+                waited=$((waited + 1))
+                main_process_running && return 1
+            done
+        fi
+
+        if pids_still_running "$old_pids"; then
+            main_process_running && return 1
+            signal_pids KILL "$old_pids"
+            /bin/sleep 1
+        fi
+
+        # Let final writeback settle. State recreated later is accepted as a
+        # fresh next-launch artifact rather than chased indefinitely.
+        /bin/sleep 3
+        main_process_running && return 1
+
+        clean_gfn_state
+    }
+
     while true; do
-        if /usr/bin/pgrep -x "$process_name" >/dev/null 2>&1 ||
-           /usr/bin/pgrep -x "$streamer_name" >/dev/null 2>&1; then
-            gfn_running=true
-        else
-            gfn_running=false
-        fi
-
-        if [[ "$gfn_running" == true ]]; then
+        if main_process_running; then
             gfn_was_running=true
-            /bin/sleep 15
-        else
-            if [[ "$gfn_was_running" == true ]]; then
-                if /usr/bin/pgrep -x "$container_name" >/dev/null 2>&1; then
-                    /usr/bin/pkill -TERM -x "$container_name" 2>/dev/null
-                    /bin/sleep 5
+        elif [[ "$gfn_was_running" == true ]]; then
+            finish_previous_session || true
 
-                    if /usr/bin/pgrep -x "$container_name" >/dev/null 2>&1; then
-                        /usr/bin/pkill -KILL -x "$container_name" 2>/dev/null
-                    fi
-                fi
-
-                for path in "${clean_paths[@]}"; do
-                    if [[ -d "$path" ]]; then
-                        /bin/rm -rf \
-                            "$path"/* \
-                            "$path"/.[!.]* \
-                            "$path"/..?* 2>/dev/null
-                    elif [[ -e "$path" ]]; then
-                        /bin/rm -f "$path" 2>/dev/null
-                    fi
-                done
+            # If GFN restarted while its old session was settling, keep the
+            # watcher armed for the newly running session.
+            if main_process_running; then
+                gfn_was_running=true
+            else
+                gfn_was_running=false
             fi
-
-            gfn_was_running=false
-            /bin/sleep 60
         fi
+
+        /bin/sleep 5
     done
 }
 
@@ -229,8 +346,8 @@ case "${1:-}" in
         shinobi2_1 "${2:-}"
         exit 0
         ;;
-    --shadow-worker-shinobi24)
-        shinobi2_4
+    --shadow-worker-shinobi25)
+        shinobi2_5
         exit 0
         ;;
     --shadow-worker-airtouch)
@@ -332,7 +449,7 @@ launch_root_worker() {
 }
 
 # launch_root_worker --shadow-worker-shinobi21 "Shinobi 2.1" "$REAL_USER"
-launch_user_worker --shadow-worker-shinobi24 "Shinobi 2.4"
+launch_user_worker --shadow-worker-shinobi25 "Shinobi 2.5"
 launch_root_worker --shadow-worker-airtouch "Airtouch"
 
 echo
